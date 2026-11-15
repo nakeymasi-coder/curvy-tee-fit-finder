@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curvy Tee Fit Finder — by Glam</title>
+<style>
+  :root{
+    color-scheme:light dark;
+    --sapphire:#69B8EE;
+    --sapphire-deep:#286C9F;
+    --sapphire-pale:#DDF2FF;
+    --chrome:#B9C7D3;
+    --chrome-bright:#EEF4F8;
+    --chrome-soft:#D8E1E8;
+    --pearl:#FFFEFF;
+    --pearl-blue:#F0F9FF;
+    --pearl-silver:#F4F7FA;
+    --card:#FFFFFF;
+    --ink:#17364D;
+    --ink-soft:#526E82;
+    --line:#C9DFEE;
+    --track:#DDEAF3;
+    --input:#FBFDFF;
+    --error-bg:#F4FAFF;
+    --error-line:#AFCFE5;
+    --error-ink:#245F89;
+    --sapphire-glow:rgba(105,184,238,.34);
+    --chrome-glow:rgba(152,176,194,.30);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 50% -10%,rgba(105,184,238,.16),transparent 35%),
+      linear-gradient(180deg,var(--pearl) 0%,var(--pearl-blue) 58%,var(--pearl-silver) 100%);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{max-width:1100px;margin:0 auto;padding:0 22px 52px;}
+  header{padding:44px 0 34px;text-align:center;}
+  .brand-eyebrow{
+    font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--sapphire);font-weight:700;
+  }
+  h1{
+    font-size:clamp(38px,7vw,68px);margin:12px auto 14px;line-height:1.02;max-width:850px;color:var(--sapphire-deep);letter-spacing:-2px;
+  }
+  .tagline{color:var(--ink-soft);font-size:clamp(17px,2.3vw,21px);line-height:1.55;margin:0 auto 24px;max-width:720px;}
+  .progress-wrap{height:10px;background:var(--track);border-radius:99px;overflow:hidden;margin:6px 0 4px;}
+  .progress-fill{
+    height:100%;width:25%;border-radius:99px;
+    background:linear-gradient(90deg,var(--sapphire),var(--sapphire-deep));
+    box-shadow:0 0 12px var(--sapphire-glow);
+    transition:width .45s ease;
+  }
+  .step-label{font-size:12px;color:var(--ink-soft);text-align:center;margin-bottom:14px;letter-spacing:1px;}
+  .step{display:none;}
+  .step.active{display:block;animation:stepIn .45s ease both;}
+  @keyframes stepIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card);border-radius:20px;padding:22px 20px;margin-bottom:14px;
+    box-shadow:0 8px 28px rgba(105,184,238,.13),0 2px 10px var(--chrome-glow);
+    border:1px solid var(--line);
+  }
+  .card h2{font-size:21px;margin:0 0 8px;color:var(--sapphire-deep);}
+  .card p{font-size:15px;line-height:1.55;color:var(--ink);margin:0 0 10px;}
+  .hint{font-size:13px;color:var(--ink-soft);line-height:1.5;}
+  .btn{
+    display:block;width:100%;border:none;cursor:pointer;
+    padding:17px 20px;border-radius:16px;font-size:18px;font-weight:800;color:#12344C;
+    background:linear-gradient(105deg,var(--sapphire) 0%,var(--sapphire-deep) 72%,#A9C6D9 100%);
+    box-shadow:0 8px 22px var(--sapphire-glow),0 0 18px rgba(103,143,170,.18);
+    transition:transform .12s ease, box-shadow .12s ease;
+    min-height:56px;
+  }
+  .btn:active{transform:scale(.98);box-shadow:0 4px 12px rgba(105,184,238,.28);}
+  .btn:focus-visible{outline:3px solid var(--chrome);outline-offset:3px;}
+  .btn-ghost{
+    background:var(--card);color:var(--sapphire-deep);border:2px solid var(--line);box-shadow:none;
+    font-size:16px;min-height:52px;margin-top:10px;
+  }
+  .btn-row{display:flex;gap:10px;margin-top:14px;}
+  .btn-row .btn{margin-top:0;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-weight:700;font-size:15px;margin-bottom:8px;color:var(--sapphire-deep);}
+  .field input[type=number],.field input[type=text],.field input[type=email]{
+    width:100%;padding:15px;border-radius:14px;border:2px solid var(--line);
+    font-size:17px;color:var(--ink);background:var(--input);min-height:56px;
+  }
+  .field input:focus{outline:none;border-color:var(--sapphire);box-shadow:0 0 0 3px rgba(105,184,238,.18),0 0 18px rgba(105,184,238,.13);}
+  .height-row{display:flex;gap:10px;align-items:flex-end;}
+  .height-row .field{flex:1;margin-bottom:0;}
+  .error{
+    display:none;background:var(--error-bg);border:1px solid var(--error-line);color:var(--error-ink);
+    border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:14px;line-height:1.5;
+  }
+  .error.show{display:block;animation:stepIn .3s ease both;}
+  .choice-grid{display:grid;gap:12px;}
+  .choice{
+    border:2px solid var(--line);border-radius:16px;padding:16px;background:var(--card);cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+    min-height:64px;
+  }
+  .choice:active{transform:scale(.99);}
+  .choice:focus-visible{outline:3px solid var(--chrome);outline-offset:2px;}
+  .choice.selected{border-color:var(--sapphire);box-shadow:0 0 0 3px rgba(105,184,238,.20),0 0 18px var(--sapphire-glow);}
+  .choice .choice-title{font-weight:800;font-size:17px;color:var(--sapphire-deep);}
+  .choice .choice-sub{font-size:14px;color:var(--ink-soft);margin-top:4px;line-height:1.45;}
+  .brand-card .swatch{
+    display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+    background:var(--chrome-soft);color:#31566F;border-radius:99px;padding:4px 10px;margin-bottom:8px;
+    box-shadow:inset 0 0 0 1px rgba(125,151,170,.30);
+  }
+  .result-hero{
+    text-align:center;padding:26px 20px;border-radius:20px;color:var(--ink);margin-bottom:14px;
+    background:linear-gradient(120deg,var(--sapphire-pale) 0%,var(--sapphire) 55%,var(--chrome-bright) 100%);
+    box-shadow:0 10px 30px var(--sapphire-glow),0 0 20px var(--chrome-glow);
+    border:1px solid rgba(255,255,255,.82);
+  }
+  .result-hero .size-big{font-size:56px;font-weight:900;line-height:1;margin:6px 0;}
+  .result-hero .brand-name{font-size:17px;font-weight:700;opacity:.95;}
+  .result-hero .eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.9;color:#17364D;}
+  .gold-rule{height:3px;border-radius:99px;background:linear-gradient(90deg,var(--chrome),var(--chrome-bright),var(--chrome));margin:14px 0;box-shadow:0 0 10px rgba(125,151,170,.30);}
+  .why-box{background:#F8FCFF;border:1px solid var(--chrome-soft);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.6;}
+  .why-box strong{color:var(--sapphire-deep);}
+  .placement-list{margin:0;padding-left:20px;font-size:15px;line-height:1.7;}
+  .compare-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
+  .compare-table th,.compare-table td{padding:10px 8px;border-bottom:1px solid var(--track);text-align:left;}
+  .compare-table th{color:var(--sapphire-deep);font-size:12px;text-transform:uppercase;letter-spacing:1px;}
+  .compare-table tr.pick td{background:var(--pearl-blue);font-weight:700;}
+  .email-box{
+    background:linear-gradient(120deg,var(--pearl-blue),var(--pearl-silver));border:2px dashed var(--sapphire);
+    border-radius:18px;padding:20px;margin-top:6px;
+    box-shadow:0 8px 26px rgba(105,184,238,.16),0 0 18px var(--chrome-glow);
+  }
+  .email-box h3{margin:0 0 6px;color:var(--sapphire-deep);font-size:19px;}
+  .email-box p{font-size:14px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5;}
+  .success-msg{display:none;text-align:center;padding:18px;font-size:16px;color:var(--sapphire-deep);font-weight:700;line-height:1.6;}
+  .success-msg.show{display:block;animation:stepIn .4s ease both;}
+  .landing-hero{padding:42px 0 34px;text-align:left;}
+  .hero-grid{min-height:570px;display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center;position:relative;}
+  .hero-copy{position:relative;z-index:2;}
+  .hero-copy h1{margin:14px 0 18px;max-width:700px;text-wrap:balance;}
+  .hero-copy h1 span{display:block;color:var(--ink);font-size:.62em;letter-spacing:-1px;margin-bottom:8px;}
+  .hero-copy .tagline{margin:0;max-width:650px;}
+  .hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 0;max-width:700px;}
+  .hero-actions .btn{width:auto;min-width:210px;text-decoration:none;text-align:center;}
+  .btn-secondary{background:var(--card);color:var(--sapphire-deep);border:2px solid var(--sapphire);box-shadow:0 6px 18px rgba(105,184,238,.14);}
+  .hero-link{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 8px;color:var(--sapphire-deep);font-weight:800;text-decoration:none;border-bottom:2px solid var(--sapphire);}
+  .hero-proof{display:flex;flex-wrap:wrap;gap:18px;margin-top:28px;color:var(--ink-soft);font-size:13px;font-weight:700;}
+  .hero-proof span{display:inline-flex;align-items:center;gap:7px;}
+  .hero-proof i{width:8px;height:8px;border-radius:50%;background:var(--sapphire);box-shadow:0 0 12px var(--sapphire-glow);}
+  .hero-stage{min-height:500px;position:relative;display:grid;place-items:center;isolation:isolate;}
+  .hero-stage::before{content:"";position:absolute;width:390px;height:390px;border-radius:50%;background:radial-gradient(circle,rgba(105,184,238,.38) 0%,rgba(238,244,248,.5) 46%,transparent 72%);filter:blur(2px);z-index:-2;}
+  .hero-stage::after{content:"";position:absolute;inset:48px 16px;border:1px solid rgba(105,184,238,.34);border-radius:50%;transform:rotate(-11deg);z-index:-1;box-shadow:0 0 38px rgba(105,184,238,.13);}
+  .tee-stack{width:min(390px,100%);height:390px;position:relative;}
+  .tee-card{position:absolute;background:rgba(255,255,255,.94);border:1px solid var(--line);box-shadow:0 22px 48px rgba(40,108,159,.16),0 0 28px var(--sapphire-glow);display:flex;flex-direction:column;justify-content:space-between;}
+  .tee-card.primary{inset:30px 24px 22px 54px;border-radius:34px;transform:rotate(-3deg);padding:38px 32px;background:linear-gradient(145deg,var(--pearl),var(--sapphire-pale) 62%,var(--chrome-bright));}
+  .tee-card.back{width:170px;height:190px;right:0;top:0;border-radius:26px;transform:rotate(8deg);padding:24px;z-index:-1;}
+  .tee-card .mini{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:900;color:var(--sapphire-deep);}
+  .tee-card .fit-mark{font-size:82px;line-height:.9;font-weight:900;letter-spacing:-5px;color:var(--sapphire-deep);text-shadow:0 0 24px rgba(105,184,238,.28);}
+  .tee-card .fit-copy{font-size:18px;line-height:1.35;font-weight:800;color:var(--ink);max-width:230px;}
+  .tee-card .size-run{display:flex;gap:7px;flex-wrap:wrap;}
+  .tee-card .size-run span{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 10px;font-size:12px;font-weight:900;color:var(--sapphire-deep);}
+  .offer-switcher{scroll-margin-top:16px;}
+  .tab-shell{position:sticky;top:0;z-index:20;padding:12px 0;background:linear-gradient(180deg,var(--pearl-blue) 72%,rgba(240,249,255,0));}
+  .tab-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:7px;background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 32px rgba(40,108,159,.12);max-width:760px;margin:0 auto;}
+  .tab-button{appearance:none;border:0;border-radius:12px;background:transparent;color:var(--ink-soft);font:inherit;font-weight:850;font-size:15px;padding:14px 12px;min-height:52px;cursor:pointer;transition:background .18s ease,color .18s ease,box-shadow .18s ease;text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .tab-button:hover{background:var(--pearl-blue);color:var(--sapphire-deep);}
+  .tab-button[aria-selected="true"]{color:#12344C;background:linear-gradient(110deg,var(--sapphire),var(--chrome-bright));box-shadow:0 6px 18px var(--sapphire-glow);}
+  .tab-button:focus-visible{outline:3px solid var(--sapphire);outline-offset:2px;}
+  .tab-panel{padding:44px 0 30px;scroll-margin-top:86px;}
+  .tab-panel.is-entering{animation:panelIn .34s ease both;}
+  @keyframes panelIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  [hidden]{display:none!important;}
+  .landing-section{border-top:0;}
+  .section-intro{text-align:center;max-width:680px;margin:0 auto 26px;}
+  .section-kicker{display:inline-block;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:var(--sapphire-deep);margin-bottom:8px;}
+  .section-intro h2{font-size:clamp(29px,5vw,44px);line-height:1.1;margin:0 0 10px;color:var(--ink);letter-spacing:-1px;}
+  .section-intro p{font-size:17px;line-height:1.6;color:var(--ink-soft);margin:0;}
+  .quiz-shell{max-width:560px;margin:0 auto;}
+  .quiz-heading{text-align:center;margin-bottom:14px;}
+  .quiz-heading h3{font-size:24px;color:var(--sapphire-deep);margin:0 0 5px;}
+  .quiz-heading p{color:var(--ink-soft);font-size:15px;margin:0 0 14px;}
+  .sales-panel{max-width:920px;margin:0 auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:26px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 44px rgba(105,184,238,.14),0 0 22px var(--chrome-glow);overflow:hidden;}
+  .sales-highlight{background:linear-gradient(135deg,var(--sapphire-pale),var(--chrome-bright) 58%,var(--pearl));padding:34px;display:flex;flex-direction:column;justify-content:center;}
+  .price{font-size:58px;font-weight:900;line-height:1;color:var(--sapphire-deep);letter-spacing:-2px;margin:8px 0;}
+  .price-note{font-size:14px;color:var(--ink-soft);}
+  .sales-copy{padding:34px;}
+  .sales-copy h3{font-size:29px;line-height:1.15;color:var(--sapphire-deep);margin:0 0 12px;}
+  .sales-copy p{font-size:16px;line-height:1.6;margin:0 0 14px;}
+  .offer-list{list-style:none;padding:0;margin:18px 0 22px;display:grid;gap:11px;}
+  .offer-list li{position:relative;padding-left:28px;line-height:1.5;color:var(--ink);}
+  .offer-list li::before{content:"✓";position:absolute;left:0;top:0;color:var(--sapphire-deep);font-weight:900;}
+  .disabled-buy{opacity:.72;cursor:not-allowed;}
+  .availability-note{text-align:center;color:var(--ink-soft);font-size:12px;line-height:1.45;margin:9px 0 0;}
+  .preorder-panel{max-width:920px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:24px;align-items:start;}
+  .tee-offer{background:linear-gradient(145deg,var(--sapphire-pale),var(--card) 52%,var(--chrome-bright));border:1px solid var(--line);border-radius:26px;padding:34px;box-shadow:0 16px 40px rgba(105,184,238,.14),0 0 20px var(--chrome-glow);}
+  .tee-offer h3{font-size:30px;color:var(--sapphire-deep);margin:8px 0 12px;line-height:1.12;}
+  .tee-offer p{font-size:16px;line-height:1.6;margin:0 0 16px;}
+  .size-pills{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 20px;}
+  .size-pills span{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:9px 13px;font-size:13px;font-weight:800;color:var(--sapphire-deep);}
+  .tee-price-row{display:flex;align-items:end;gap:12px;padding-top:18px;border-top:1px solid var(--line);}
+  .tee-price-row .price{font-size:52px;margin:0;}
+  .tee-price-row span{font-size:14px;color:var(--ink-soft);padding-bottom:6px;}
+  .waitlist-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 12px 34px rgba(105,184,238,.12);}
+  .waitlist-card h3{font-size:24px;color:var(--sapphire-deep);margin:0 0 8px;}
+  .waitlist-card p{font-size:15px;color:var(--ink-soft);line-height:1.55;margin:0 0 18px;}
+  footer{text-align:center;margin-top:26px;font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  @media(max-width:820px){
+    .hero-grid{grid-template-columns:1fr;gap:10px;min-height:0;}
+    .hero-copy{text-align:center;}
+    .hero-copy h1,.hero-copy .tagline{margin-left:auto;margin-right:auto;}
+    .hero-actions,.hero-proof{justify-content:center;}
+    .hero-stage{min-height:360px;}
+    .tee-stack{height:335px;width:min(350px,94%);}
+    .tee-card.primary{inset:24px 24px 10px 40px;padding:30px 26px;}
+    .tee-card.back{width:145px;height:155px;}
+    .tee-card .fit-mark{font-size:66px;}
+  }
+  @media(max-width:700px){
+    .app{padding:0 14px 32px;}
+    .landing-hero{padding:30px 0 18px;}
+    h1{letter-spacing:-1px;font-size:clamp(40px,12vw,57px);}
+    .hero-actions{display:grid;width:100%;}
+    .hero-actions .btn,.hero-link{width:100%;min-width:0;}
+    .hero-proof{gap:10px 16px;margin-top:22px;}
+    .hero-stage{min-height:320px;}
+    .tee-stack{height:300px;}
+    .tee-card.primary{inset:18px 16px 4px 28px;border-radius:28px;padding:26px 22px;}
+    .tee-card.back{width:125px;height:140px;right:2px;}
+    .tee-card .fit-mark{font-size:58px;}
+    .tee-card .fit-copy{font-size:16px;}
+    .tab-shell{margin:0 -8px;padding-top:8px;}
+    .tab-bar{gap:4px;padding:5px;border-radius:15px;}
+    .tab-button{font-size:13px;padding:11px 6px;min-height:48px;line-height:1.2;}
+    .tab-panel{padding:34px 0 22px;}
+    .sales-panel,.preorder-panel{grid-template-columns:1fr;}
+    .sales-highlight,.sales-copy,.tee-offer,.waitlist-card{padding:26px 22px;}
+    .sales-highlight{text-align:center;}
+    .price{font-size:50px;}
+  }
+  footer .heart{color:var(--sapphire);}
+  .fade-item{opacity:0;transform:translateY(12px);animation:riseIn .5s ease forwards;}
+  @keyframes riseIn{to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --pearl:#FFFEFF;
+      --pearl-blue:#F0F9FF;
+      --pearl-silver:#F4F7FA;
+      --card:#FFFFFF;
+      --ink:#17364D;
+      --ink-soft:#526E82;
+      --line:#C9DFEE;
+      --track:#DDEAF3;
+      --input:#FBFDFF;
+      --chrome-soft:#D8E1E8;
+      --error-bg:#F4FAFF;
+      --error-line:#AFCFE5;
+      --error-ink:#245F89;
+    }
+    body{background:radial-gradient(circle at 50% -10%,rgba(105,184,238,.16),transparent 35%),linear-gradient(180deg,var(--pearl),var(--pearl-blue) 58%,var(--pearl-silver));}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="landing-hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="brand-eyebrow">A CURVY TEE EXPERIENCE BY GLAM</div>
+        <h1><span>Stop guessing.</span>Meet your better-fit tee.</h1>
+        <p class="tagline">Find your true size in 60 seconds, learn what flatters curvy bodies, and get first dibs on the $39 tee drop.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#offers" data-offer-target="quiz">Take the Fit Quiz</a>
+          <a class="btn btn-secondary" href="https://nakeymasi-coder.github.io/prompt-like-glam-workshop/curvy-tee-fit-guide/" target="_blank" rel="noopener noreferrer">See the Free Guide</a>
+          <a class="hero-link" href="#offers" data-offer-target="preorder">Join the Tee Drop →</a>
+        </div>
+        <div class="hero-proof" aria-label="Offer details">
+          <span><i></i>Made for curvy bodies</span>
+          <span><i></i>Sizes 2X–5X</span>
+          <span><i></i>Free shipping on the drop</span>
+        </div>
+      </div>
+      <div class="hero-stage" aria-label="Curvy tee fit, sizes 2X through 5X">
+        <div class="tee-stack" aria-hidden="true">
+          <div class="tee-card back"><span class="mini">The fit edit</span><div class="fit-copy">Room where you need it.</div></div>
+          <div class="tee-card primary">
+            <span class="mini">Your fit · your way</span>
+            <div class="fit-mark">2X–5X</div>
+            <div class="fit-copy">A better tee starts with the right measurements.</div>
+            <div class="size-run"><span>Relaxed</span><span>True fit</span><span>Fitted</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="offers" class="offer-switcher">
+    <div class="tab-shell">
+      <div class="tab-bar" role="tablist" aria-label="Choose an offer">
+        <button class="tab-button" id="tab-quiz" role="tab" aria-selected="true" aria-controls="quiz" tabindex="0" data-tab="quiz">Take the Quiz</button>
+        <a class="tab-button" id="tab-guide" href="https://nakeymasi-coder.github.io/prompt-like-glam-workshop/curvy-tee-fit-guide/" target="_blank" rel="noopener noreferrer" aria-label="Open the free Curvy Tee Fit Guide in a new tab">Free Guide</a>
+        <button class="tab-button" id="tab-preorder" role="tab" aria-selected="false" aria-controls="preorder" tabindex="-1" data-tab="preorder">$39 Tee Drop</button>
+      </div>
+    </div>
+
+    <section class="landing-section tab-panel" id="quiz" role="tabpanel" aria-labelledby="tab-quiz">
+      <div class="section-intro">
+        <span class="section-kicker">First: find your fit</span>
+        <h2>No more guessing at the size chart.</h2>
+        <p>Answer three quick questions for a personalized blank, size, and design-placement recommendation.</p>
+      </div>
+      <div class="quiz-shell">
+        <div class="quiz-heading">
+          <h3>Curvy Tee Fit Finder</h3>
+          <p>Made for real bodies. Find your true size in seconds. ♡</p>
+          <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="step-label" id="stepLabel">Step 1 of 4</div>
+        </div>
+
+        <section class="step active" id="step-1">
+          <div class="card">
+            <h2>Stop guessing your tee size ✦</h2>
+            <p>Tag sizes lie. Tape measures don't. Answer 3 quick questions and I'll tell you your <strong>real size</strong> in the most popular blank tees — plus exactly where your design should sit so it looks amazing on a curvy body.</p>
+            <p class="hint">Takes about 60 seconds. No judgment here — every body is a good body.</p>
+          </div>
+          <button class="btn" onclick="goStep(2)">Find my fit ♡</button>
+        </section>
+
+        <section class="step" id="step-2">
+          <div class="card">
+            <h2>Your measurements</h2>
+            <p class="hint">Measure around the fullest part of your bust with the tape snug but not tight, arms relaxed at your sides. Waist is optional — it just helps me fine-tune the fit.</p>
+            <div class="error" id="err2"></div>
+            <div class="field"><label for="bust">Bust (inches) *</label><input type="number" id="bust" inputmode="decimal" placeholder="e.g. 48" min="34" max="75" step="0.5"></div>
+            <div class="field"><label for="waist">Waist (inches) <span style="font-weight:400;color:var(--ink-soft)">— optional</span></label><input type="number" id="waist" inputmode="decimal" placeholder="e.g. 40" min="24" max="70" step="0.5"></div>
+            <div class="field"><label>Height</label><div class="height-row"><div class="field"><input type="number" id="heightFt" inputmode="numeric" placeholder="ft" min="4" max="7" aria-label="feet"></div><div class="field"><input type="number" id="heightIn" inputmode="numeric" placeholder="in" min="0" max="11" aria-label="inches"></div></div></div>
+            <div class="field">
+              <label>How do you like your tees to fit?</label>
+              <div class="choice-grid" id="fitChoices">
+                <div class="choice" data-fit="relaxed" onclick="pickFit(this)"><div class="choice-title">Relaxed</div><div class="choice-sub">Room to move — my everyday comfort fit</div></div>
+                <div class="choice" data-fit="true" onclick="pickFit(this)"><div class="choice-title">True to size ✦</div><div class="choice-sub">Skims my body without clinging</div></div>
+                <div class="choice" data-fit="fitted" onclick="pickFit(this)"><div class="choice-title">Fitted</div><div class="choice-sub">Shows off my shape</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(1)">← Back</button><button class="btn" onclick="submitMeasurements()">Next →</button></div>
+        </section>
+
+        <section class="step" id="step-3">
+          <div class="card">
+            <h2>Pick your blank</h2>
+            <p class="hint">Not sure? Choose “Recommend for me” and I'll pick the best match for your measurements.</p>
+            <div class="choice-grid" id="brandChoices">
+              <div class="choice brand-card" data-brand="cc1717" onclick="pickBrand(this)"><span class="swatch">Up to 4XL</span><div class="choice-title">Comfort Colors 1717</div><div class="choice-sub">Relaxed, garment-dyed, vintage-soft with a boxier cozy fit. The crowd favorite.</div></div>
+              <div class="choice brand-card" data-brand="g5000" onclick="pickBrand(this)"><span class="swatch">Up to 5XL · roomiest</span><div class="choice-title">Gildan 5000 Heavy Cotton</div><div class="choice-sub">Classic sturdy workhorse with a roomy classic cut. Goes up to 5XL — the roomiest of the three.</div></div>
+              <div class="choice brand-card" data-brand="b3001c" onclick="pickBrand(this)"><span class="swatch">Up to 4XL</span><div class="choice-title">Bella+Canvas 3001C</div><div class="choice-sub">Soft, modern retail fit with a slightly trimmer cut. Size up if you're between sizes.</div></div>
+              <div class="choice brand-card" data-brand="auto" onclick="pickBrand(this)"><span class="swatch" style="background:var(--pearl-blue);color:var(--sapphire-deep);">✦ Best match</span><div class="choice-title">Recommend for me</div><div class="choice-sub">I'll compare all three and pick your perfect match.</div></div>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-ghost" onclick="goStep(2)">← Back</button><button class="btn" onclick="submitBrand()">See my results ♡</button></div>
+        </section>
+
+        <section class="step" id="step-4"><div id="resultsWrap"></div><button class="btn btn-ghost" onclick="restart()">↺ Start over</button></section>
+      </div>
+    </section>
+
+    <section class="landing-section tab-panel" id="guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+      <div class="section-intro">
+        <span class="section-kicker">Next: know what works</span>
+        <h2>The Curvy Tee Fit Guide</h2>
+        <p>Turn one size recommendation into a complete playbook for choosing, wearing, and selling tees that truly respect curvy bodies.</p>
+      </div>
+      <div class="sales-panel">
+        <div class="sales-highlight">
+          <span class="section-kicker">Instant digital guide</span>
+          <div class="price">FREE</div>
+          <span class="price-note">Free access</span>
+        </div>
+        <div class="sales-copy">
+          <h3>Stop settling for “just size up.”</h3>
+          <p>This is the straight-talk guide to the blanks, measurements, and print choices that make a real difference from 2X through 5X.</p>
+          <ul class="offer-list">
+            <li>Honest fit notes for the most popular blank brands</li>
+            <li>Design sizing and placement rules for curvy bodies</li>
+            <li>A listing checklist for winning plus-size buyers' trust</li>
+          </ul>
+          <a class="btn" href="https://nakeymasi-coder.github.io/prompt-like-glam-workshop/curvy-tee-fit-guide/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:center;">Open the Free Guide</a>
+          <p class="availability-note">Free access opens in a new tab.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section tab-panel" id="preorder" role="tabpanel" aria-labelledby="tab-preorder" hidden>
+      <div class="section-intro">
+        <span class="section-kicker">Then: wear the difference</span>
+        <h2>The $39 Curvy Tee Drop</h2>
+        <p>A size-inclusive pre-order built around roomy, trusted blanks — with free shipping included.</p>
+      </div>
+      <div class="preorder-panel">
+        <div class="tee-offer">
+          <span class="section-kicker">First drop · limited pre-order</span>
+          <h3>Soft where you want it. Room where you need it.</h3>
+          <p><strong>Comfort Colors 1717</strong> is the hero blank for sizes 2X–4X, with the relaxed, garment-dyed feel curvy shoppers love. For 5X, the <strong>Gildan 5000</strong> brings the roomiest dependable fit.</p>
+          <div class="size-pills"><span>2X · Comfort Colors</span><span>3X · Comfort Colors</span><span>4X · Comfort Colors</span><span>5X · Gildan 5000</span></div>
+          <div class="tee-price-row"><div class="price">$39</div><span>free shipping included</span></div>
+        </div>
+        <div class="waitlist-card">
+          <div id="waitlistForm">
+            <h3>Join the pre-order waitlist</h3>
+            <p>Be first to know when the drop opens. Add your name and email — you'll stay right here on the page.</p>
+            <form onsubmit="return captureEmail(event,'waitlistName','waitlistEmail','waitlistForm','waitlistSuccess')">
+              <div class="field"><label for="waitlistName">Name</label><input type="text" id="waitlistName" placeholder="Your name" required></div>
+              <div class="field"><label for="waitlistEmail">Email</label><input type="email" id="waitlistEmail" placeholder="Your email address" required></div>
+              <button class="btn" type="submit">Join the waitlist ✦</button>
+            </form>
+          </div>
+          <div class="success-msg" id="waitlistSuccess">You're on the list, gorgeous! ♡<br>We'll let you know when the $39 pre-order opens.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Made with <span class="heart">♡</span> by Glam for every gorgeous curvy body.<br>Sizes based on official manufacturer spec sheets.</footer>
+</div>
+
+<script>
+/* =====================================================================
+   SIZING DATA — garment chest circumference in inches (body width x 2).
+   Verified from official manufacturer spec sheets (Oct 2026):
+   - Comfort Colors 1717: laid-flat chest 2XL 26 / 3XL 27.75 / 4XL 29.75
+     (Comfort Colors official spec sheet via cdn.blankstyle.com / cdn.inksoft.com)
+   - Gildan 5000 Heavy Cotton: laid-flat body width 2XL 26 / 3XL 28 / 4XL 30 / 5XL 32
+     (Gildan finished-measurements charts via printedshirts.ca, ninjatransfers.com, alldayshirts.com)
+   - Bella+Canvas 3001C: laid-flat chest 2XL 26 / 3XL 28 / 4XL 30
+     (Bella+Canvas charts via instacustoms.com, reliantapparel.com, shirtspace.com, jiffy.com)
+   XL (48" chest) included for all three from the same charts so smaller
+   busts still get a correct answer. Comfort Colors 1717 tops out at 4XL;
+   Gildan 5000 goes to 5XL.
+   ===================================================================== */
+const BLANKS = {
+  cc1717: {
+    name: "Comfort Colors 1717",
+    tag: "The cozy favorite",
+    maxNote: "tops out at 4XL",
+    sizes: [
+      { label: "XL",  chest: 48 },
+      { label: "2XL", chest: 52 },
+      { label: "3XL", chest: 55.5 },
+      { label: "4XL", chest: 59.5 }
+    ],
+    care: "Garment-dyed for that lived-in softness. Wash cold, inside out, and skip high dryer heat to keep those rich colors gorgeous."
+  },
+  g5000: {
+    name: "Gildan 5000 Heavy Cotton",
+    tag: "The roomy workhorse",
+    maxNote: "goes up to 5XL — roomiest of the three",
+    sizes: [
+      { label: "XL",  chest: 48 },
+      { label: "2XL", chest: 52 },
+      { label: "3XL", chest: 56 },
+      { label: "4XL", chest: 60 },
+      { label: "5XL", chest: 64 }
+    ],
+    care: "A sturdy 100% cotton classic. Wash cold inside out. Expect a touch of shrinkage on the first wash — totally normal."
+  },
+  b3001c: {
+    name: "Bella+Canvas 3001C",
+    tag: "The soft modern fit",
+    maxNote: "tops out at 4XL",
+    sizes: [
+      { label: "XL",  chest: 48 },
+      { label: "2XL", chest: 52 },
+      { label: "3XL", chest: 56 },
+      { label: "4XL", chest: 60 }
+    ],
+    care: "Lightweight and silky-soft with a trimmer retail cut. Wash cold inside out; hang dry or tumble low to keep that soft feel."
+  }
+};
+
+/* Ease added to bust for each fit preference (inches of breathing room) */
+const EASE = { relaxed: 4.5, true: 2.5, fitted: 0.5 };
+const FIT_LABEL = { relaxed: "Relaxed", true: "True to size", fitted: "Fitted" };
+
+/* Print-width guidance by recommended size (curvy-body placement) */
+function printWidth(sizeLabel){
+  if (sizeLabel === "2XL") return "10.5–11 inches wide";
+  if (sizeLabel === "3XL") return "11–12 inches wide";
+  if (sizeLabel === "4XL" || sizeLabel === "5XL") return "11.5–12.5 inches wide";
+  return "9.5–10.5 inches wide"; /* XL — estimate */
+}
+
+const state = { bust:null, waist:null, heightIn:null, fit:null, brand:null };
+
+function activateOffer(name, options){
+  const settings = options || {};
+  const tab = document.querySelector('.tab-button[data-tab="' + name + '"]');
+  const panel = document.getElementById(name);
+  if (!tab || !panel) return;
+
+  document.querySelectorAll(".tab-button").forEach(function(button){
+    const selected = button === tab;
+    button.setAttribute("aria-selected", selected ? "true" : "false");
+    button.tabIndex = selected ? 0 : -1;
+  });
+  document.querySelectorAll(".tab-panel").forEach(function(section){
+    section.hidden = section !== panel;
+    section.classList.remove("is-entering");
+  });
+  panel.classList.add("is-entering");
+  window.setTimeout(function(){ panel.classList.remove("is-entering"); }, 380);
+
+  if (settings.focus) tab.focus();
+  if (settings.scroll !== false){
+    document.getElementById("offers").scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+}
+
+function goStep(n){
+  activateOffer("quiz", { scroll:false });
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById("step-"+n).classList.add("active");
+  document.getElementById("progressFill").style.width = (n*25) + "%";
+  document.getElementById("stepLabel").textContent = "Step " + n + " of 4";
+  document.getElementById("quiz").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function pickFit(el){
+  document.querySelectorAll("#fitChoices .choice").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  state.fit = el.dataset.fit;
+}
+
+function pickBrand(el){
+  document.querySelectorAll("#brandChoices .choice").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  state.brand = el.dataset.brand;
+}
+
+function showErr(id, msg){
+  const e = document.getElementById(id);
+  e.textContent = msg;
+  e.classList.add("show");
+}
+function clearErr(id){ document.getElementById(id).classList.remove("show"); }
+
+function submitMeasurements(){
+  clearErr("err2");
+  const bust = parseFloat(document.getElementById("bust").value);
+  const waistRaw = document.getElementById("waist").value;
+  const waist = waistRaw === "" ? null : parseFloat(waistRaw);
+  const ft = parseInt(document.getElementById("heightFt").value, 10);
+  const inch = parseInt(document.getElementById("heightIn").value, 10);
+
+  if (isNaN(bust) || bust < 34 || bust > 75){
+    showErr("err2", "Hmm, that bust number looks off — enter a number between 34 and 75 inches. Measure around the fullest part of your bust. ♡");
+    return;
+  }
+  if (waist !== null && (isNaN(waist) || waist < 24 || waist > 70)){
+    showErr("err2", "That waist number looks a little off — try something between 24 and 70 inches, or leave it blank. No pressure!");
+    return;
+  }
+  if (isNaN(ft) || isNaN(inch) || ft < 4 || ft > 7 || inch < 0 || inch > 11){
+    showErr("err2", "Let's get your height right — enter feet (4–7) and inches (0–11).");
+    return;
+  }
+  if (!state.fit){
+    showErr("err2", "Pick how you like your tees to fit — relaxed, true to size, or fitted. There's no wrong answer! ✦");
+    return;
+  }
+  state.bust = bust;
+  state.waist = waist;
+  state.heightIn = ft*12 + inch;
+  goStep(3);
+}
+
+function submitBrand(){
+  if (!state.brand){
+    pickBrand(document.querySelector('#brandChoices .choice[data-brand="auto"]'));
+  }
+  renderResults();
+  goStep(4);
+}
+
+/* Smallest size whose garment chest meets/exceeds bust + ease */
+function recommend(bust, ease, blank){
+  const target = bust + ease;
+  for (const s of blank.sizes){
+    if (s.chest >= target) return { size: s, target: target, excess: +(s.chest - target).toFixed(1) };
+  }
+  return null;
+}
+
+function bestBrand(bust, ease){
+  let best = null;
+  for (const key of Object.keys(BLANKS)){
+    const r = recommend(bust, ease, BLANKS[key]);
+    if (r && (!best || r.excess < best.rec.excess)) best = { key, rec: r };
+  }
+  return best;
+}
+
+function renderResults(){
+  const ease = EASE[state.fit];
+  const wrap = document.getElementById("resultsWrap");
+  let html = "";
+  let delay = 0;
+  const anim = () => { delay += 0.08; return ' style="animation-delay:' + delay.toFixed(2) + 's"'; };
+
+  const keys = state.brand === "auto" ? Object.keys(BLANKS) : [state.brand];
+  const recs = {};
+  keys.forEach(k => { recs[k] = recommend(state.bust, ease, BLANKS[k]); });
+
+  /* ---------- HERO ---------- */
+  if (state.brand === "auto"){
+    const best = bestBrand(state.bust, ease);
+    if (best){
+      html += '<div class="result-hero fade-item"' + anim() + '>' +
+        '<div class="eyebrow">Your perfect match</div>' +
+        '<div class="size-big">' + best.rec.size.label + '</div>' +
+        '<div class="brand-name">' + BLANKS[best.key].name + '</div></div>';
+    } else {
+      html += overflowCard(anim());
+    }
+  } else {
+    const r = recs[state.brand];
+    if (r){
+      html += '<div class="result-hero fade-item"' + anim() + '>' +
+        '<div class="eyebrow">Your fit in</div>' +
+        '<div class="brand-name">' + BLANKS[state.brand].name + '</div>' +
+        '<div class="size-big">' + r.size.label + '</div></div>';
+    } else {
+      html += overflowCard(anim());
+    }
+  }
+
+  /* ---------- WHY CARD ---------- */
+  const shown = keys.map(k => ({ key:k, rec:recs[k] })).filter(x => x.rec);
+  if (shown.length){
+    const primary = state.brand === "auto" ? bestBrand(state.bust, ease) : { key: state.brand, rec: recs[state.brand] };
+    html += '<div class="card fade-item"' + anim() + '><h2>Why this size? ✦</h2>' +
+      '<div class="why-box">Your bust is <strong>' + state.bust + '"</strong> and you chose a <strong>' +
+      FIT_LABEL[state.fit].toLowerCase() + '</strong> fit, so we added about <strong>' + ease +
+      '" of breathing room</strong> — that means you need at least <strong>' +
+      (state.bust + ease).toFixed(1).replace(/\.0$/, "") + '"</strong> around. ' +
+      'A <strong>' + primary.rec.size.label + '</strong> in ' + BLANKS[primary.key].name +
+      ' measures <strong>' + primary.rec.size.chest + '"</strong> around, giving you ' +
+      '<strong>' + primary.rec.excess + '"</strong> of comfortable room. No pulling, no clinging — just comfort. ✦</div></div>';
+
+    /* ---------- COMPARISON (auto mode or all fits) ---------- */
+    html += '<div class="card fade-item"' + anim() + '><h2>How you fit in each blank ✦</h2>' +
+      '<table class="compare-table"><tr><th>Blank</th><th>Your size</th><th>Measures</th></tr>';
+    Object.keys(BLANKS).forEach(k => {
+      const r = recommend(state.bust, ease, BLANKS[k]);
+      const isPick = state.brand === "auto"
+        ? (bestBrand(state.bust, ease) && bestBrand(state.bust, ease).key === k)
+        : (k === state.brand);
+      html += '<tr' + (isPick ? ' class="pick"' : '') + '><td>' + BLANKS[k].name +
+        '<br><span class="hint">' + BLANKS[k].maxNote + '</span></td><td>' +
+        (r ? r.size.label : "—") + '</td><td>' + (r ? r.size.chest + '"' : "doesn't go big enough") + '</td></tr>';
+    });
+    html += '</table></div>';
+
+    /* ---------- DESIGN PLACEMENT ---------- */
+    const pSize = primary.rec.size.label;
+    html += '<div class="card fade-item"' + anim() + '><h2>Design placement guide ✦</h2>' +
+      '<div class="gold-rule"></div>' +
+      '<ul class="placement-list">' +
+      '<li><strong>Print width:</strong> aim for <strong>' + printWidth(pSize) + '</strong> for a ' + pSize + '.</li>' +
+      '<li><strong>Placement:</strong> center chest, starting about <strong>3–4 inches below the neckline</strong>.</li>' +
+      '<li><strong>Curvy-body tip:</strong> keep text and faces <strong>off the fullest point of the bust</strong> so the design lays flat instead of stretching over the curve.</li>' +
+      '<li><strong>Wider is better:</strong> on 2X and up, a too-small print looks lost — don\'t be shy with size.</li>' +
+      '</ul></div>';
+
+    /* ---------- PERSONAL TIPS ---------- */
+    let tips = "";
+    if (state.heightIn >= 68){
+      tips += "<li>You're tall and gorgeous — look for longer body lengths so your tee doesn't ride up. The Gildan 5000 runs a little longer.</li>";
+    }
+    if (state.waist !== null && (state.bust - state.waist) >= 10){
+      tips += "<li>With your beautiful curves, a true-to-size or fitted cut will show off that shape — relaxed will drape softly over it. Both are stunning.</li>";
+    }
+    if (tips){
+      html += '<div class="card fade-item"' + anim() + '><h2>Just for you ♡</h2><ul class="placement-list">' + tips + '</ul></div>';
+    }
+
+    /* ---------- CARE TIP ---------- */
+    html += '<div class="card fade-item"' + anim() + '><h2>Fabric & care ✦</h2><p>' +
+      BLANKS[primary.key].care + '</p></div>';
+  }
+
+  /* ---------- EMAIL CAPTURE ---------- */
+  /* =====================================================================
+     EMAIL WIRING (LIVE): The form below saves signups to Glam's Google Form
+     "Curvy Tee Fit Finder" in the background via captureEmail(). No accounts,
+     no redirects — shoppers stay on the quiz. See new signups under the
+     form's Responses tab in Google Drive.
+     Form: https://docs.google.com/forms/d/e/1FAIpQLScis8msOAjoZoNRVQ8cfmxHDMA4SMuwLFieURyycCZu7MO6Ig/viewform
+     ===================================================================== */
+  html += '<div class="email-box fade-item"' + anim() + '>' +
+    '<div id="emailForm"><h3>Get your fit results + first dibs 💌</h3>' +
+    '<p>Join the list for early access to the $39 tee drop.</p>' +
+    '<form onsubmit="return captureEmail(event,\'quizName\',\'emailAddr\',\'emailForm\',\'emailSuccess\')">' +
+    '<div class="field"><input type="text" id="quizName" placeholder="Your name" required></div>' +
+    '<div class="field"><input type="email" id="emailAddr" placeholder="Your email address" required></div>' +
+    '<button class="btn" type="submit">Email me my results ✨</button>' +
+    '</form>' +
+    '<p class="hint">Join the list and you\'ll be first to know when the $39 pre-order tee drops.</p></div>' +
+    '<div class="success-msg" id="emailSuccess">You\'re on the list, gorgeous! 💕 Your fit results are right above — and you\'ll be first to know when the $39 tee drops.</div>' +
+    '</div>';
+
+  wrap.innerHTML = html;
+}
+
+function overflowCard(animFn){
+  return '<div class="card fade-item"' + animFn() + '><h2>You deserve better than these size charts ♡</h2>' +
+    '<p>Your beautiful body needs more room than these three blanks offer in their biggest sizes (they top out around 60–64" around). <strong>That is not a you problem — it\'s a size-range problem.</strong></p>' +
+    '<p>The <strong>Gildan 5000 in 5XL (64" around)</strong> is the roomiest of the bunch and your best starting point. And custom-made options go even further.</p>' +
+    '<p class="hint">Every body deserves a tee that fits. We\'re working on it. ✦</p></div>';
+}
+
+/* Google Form "Curvy Tee Fit Finder" — saves quiz signups in the background.
+   Responses land under the form's Responses tab in Glam's Google Drive. */
+var GFIT_FORM_ID = "1FAIpQLScis8msOAjoZoNRVQ8cfmxHDMA4SMuwLFieURyycCZu7MO6Ig";
+var GFIT_ENTRY_NAME = "entry.1272429565";
+var GFIT_ENTRY_EMAIL = "entry.2127716552";
+
+function captureEmail(e, nameId, emailId, formWrapId, successId){
+  e.preventDefault();
+  const name = document.getElementById(nameId).value.trim();
+  const v = document.getElementById(emailId).value.trim();
+  if (!name || !v || v.indexOf("@") < 0) return false;
+  /* Post to the Google Form through a hidden iframe, exactly like a normal
+     form submission — no redirect, shopper never leaves the quiz. */
+  try {
+    let iframe = document.getElementById("gformFrame");
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.id = "gformFrame";
+      iframe.name = "gformFrame";
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+    }
+    const f = document.createElement("form");
+    f.action = "https://docs.google.com/forms/d/e/" + GFIT_FORM_ID + "/formResponse";
+    f.method = "POST";
+    f.target = "gformFrame";
+    const fields = {};
+    fields[GFIT_ENTRY_NAME] = name;
+    fields[GFIT_ENTRY_EMAIL] = v;
+    for (const k in fields) {
+      const inp = document.createElement("input");
+      inp.type = "hidden"; inp.name = k; inp.value = fields[k];
+      f.appendChild(inp);
+    }
+    document.body.appendChild(f);
+    f.submit();
+    f.remove();
+  } catch (err) { /* quiz still shows success; signup is best-effort */ }
+  document.getElementById(formWrapId).style.display = "none";
+  document.getElementById(successId).classList.add("show");
+  return false;
+}
+
+function restart(){
+  state.bust = null; state.waist = null; state.heightIn = null; state.fit = null; state.brand = null;
+  ["bust","waist","heightFt","heightIn"].forEach(id => { document.getElementById(id).value = ""; });
+  document.querySelectorAll(".choice.selected").forEach(c => c.classList.remove("selected"));
+  clearErr("err2");
+  goStep(1);
+}
+
+document.querySelectorAll('.tab-button[role="tab"]').forEach(function(button){
+  button.addEventListener("click", function(){ activateOffer(button.dataset.tab, { scroll:false }); });
+  button.addEventListener("keydown", function(event){
+    if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+    event.preventDefault();
+    const tabs = Array.from(document.querySelectorAll('.tab-button[role="tab"]'));
+    let index = tabs.indexOf(button);
+    if (event.key === "ArrowLeft") index = (index - 1 + tabs.length) % tabs.length;
+    if (event.key === "ArrowRight") index = (index + 1) % tabs.length;
+    if (event.key === "Home") index = 0;
+    if (event.key === "End") index = tabs.length - 1;
+    activateOffer(tabs[index].dataset.tab, { scroll:false, focus:true });
+  });
+});
+
+document.querySelectorAll("[data-offer-target]").forEach(function(link){
+  link.addEventListener("click", function(){
+    activateOffer(link.dataset.offerTarget, { scroll:true });
+  });
+});
+</script>
+</body>
+</html>
